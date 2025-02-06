@@ -1,2 +1,0 @@
-# terraform-importer
-# terraform-importer
