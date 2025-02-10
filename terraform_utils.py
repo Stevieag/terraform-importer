@@ -1,5 +1,6 @@
 import os
 import re
+import requests
 import random
 import subprocess
 from typing import List, Dict, Optional
@@ -9,25 +10,71 @@ def clean_up() -> None:
     """Remove temporary Terraform-related files."""
     os.system("rm -rf .terraform .terraform.lock.hcl import_okta_resources.sh okta_provider.tf")
 
-def create_terraform_config(api_key: str, base_url: str, org_name: str, provider_version: str) -> None:
-    """Generate the Terraform configuration file for the Okta provider."""
-    config = f"""terraform {{
+def get_latest_provider_version(provider_name: str) -> str:
+    """Fetch the latest provider version from the Terraform registry."""
+    if provider_name == "okta":
+        url = "https://registry.terraform.io/v1/providers/okta/okta"
+    elif provider_name == "google":
+         url = "https://registry.terraform.io/v1/providers/hashicorp/google" #Different URL to Okta
+    else:
+        raise ValueError(f"Unsupported provider: {provider_name}")
+
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
+        data = response.json()
+        return data['version']
+    except requests.RequestException as e:
+        print(f"Failed to fetch the latest {provider_name} provider version: {e}")
+        return "~> 4.0"  # Default version if fetching fails
+
+from terraform_utils import get_latest_provider_version
+def create_terraform_config(provider: str, **kwargs) -> None:
+    """Generate the Terraform configuration file for the specified provider."""
+    google_version = get_latest_provider_version("google")
+    okta_version = get_latest_provider_version("okta")
+
+    terraform_block = f"""terraform {{
   required_providers {{
-    okta = {{
-      source  = "okta/okta"
-      version = "{provider_version}"
+    google = {{
+      source  = "hashicorp/google"
+      version = "{google_version}"
     }}
+    okta = {{
+      source = "okta/okta"
+      version = "{okta_version}"
+        }}
   }}
 }}
+"""
+    with open("main.tf", "w") as f:
+        f.write(terraform_block)
+    create_provider_block(provider, **kwargs)
 
-provider "okta" {{
-  org_name  = "{org_name}"
-  base_url  = "{base_url}"
-  api_token = "{api_key}"
+def create_provider_block(provider: str, **kwargs) -> None:
+    """Generates the provider block"""
+    if provider.lower() == "gcp":
+        config = f"""provider "google" {{
+  project     = "{kwargs['project_id']}"
+  region      = "{kwargs.get('region', 'us-central1')}"
+  zone        = "{kwargs['zone']}"
+  credentials = "{kwargs['creds']}"
 }}
 """
-    with open("okta_provider.tf", "w") as f:
+    elif provider.lower() == "okta":
+        config = f"""provider "okta" {{
+  org_name  = "{kwargs['org_name']}"
+  base_url  = "{kwargs['base_url']}"
+  api_token = "{kwargs['api_key']}"
+}}
+"""
+    else:
+        raise ValueError(f"Unsupported provider: {provider}")
+
+    with open("main.tf", "a") as f:
         f.write(config)
+
+    print("\nTerraform configuration created successfully: main.tf")
 
 def create_terraform_import_script(data: List[Dict], resource_type: str) -> Optional[str]:
     """Generate a Terraform import script for Okta resources."""

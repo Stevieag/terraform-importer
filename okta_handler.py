@@ -74,7 +74,13 @@ def main() -> None:
 
     check_provider_availability(provider_version, latest_version)
 
-    create_terraform_config(api_key, base_url, org_name, provider_version)
+    create_terraform_config(
+        provider="okta",
+        api_key=api_key,
+        base_url=base_url,
+        org_name=org_name,
+        provider_version=provider_version
+    )
     print("\nTerraform configuration created successfully!")
 
     if not check_terraform_init():
