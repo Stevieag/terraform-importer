@@ -128,3 +128,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+#Copyright (c) 2025 Stephen Agius
+#Licensed under the GNU General Public License, version 3.

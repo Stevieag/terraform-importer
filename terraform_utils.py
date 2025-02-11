@@ -169,3 +169,5 @@ def handle_duplicate_imports(file_path: str) -> None:
     except IOError as e:
         print(f"Error handling duplicate imports in {file_path}: {e}")
 
+#Copyright (c) 2025 Stephen Agius
+#Licensed under the GNU General Public License, version 3.

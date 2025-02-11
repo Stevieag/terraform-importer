@@ -29,3 +29,8 @@ def check_terraform_init() -> bool:
     except FileNotFoundError:
         print("Error: Terraform is not installed or not in your PATH.")
         return False
+
+
+
+#Copyright (c) 2025 Stephen Agius
+#Licensed under the GNU General Public License, version 3.
