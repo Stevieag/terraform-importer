@@ -12,3 +12,6 @@ Create the terraform for the resources and output a plan.
 Okta base is complete and does do this
 
 PLEASE ENSURE YOU DO NOT UPLOAD KEYS
+
+#Copyright (c) 2025 Stephen Agius
+#Licensed under the GNU General Public License, version 3.
